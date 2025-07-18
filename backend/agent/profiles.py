@@ -73,7 +73,7 @@ class AgentProfiles(MongoDBConnector):
         
         # Construct the system prompt
         system_prompt = f"""
-            # {profile.get('profile', 'Market Assistant')}
+            # {profile.get('profile', 'Assistant')}
 
             ## Role
             {profile.get('role', '')}
@@ -82,14 +82,19 @@ class AgentProfiles(MongoDBConnector):
             {profile.get('motive', '')}
 
             ## Available Tools
-            1. market_analysis_reports_vector_search_tool - Use for portfolio-specific market analysis and insights
-            2. market_news_reports_vector_search_tool - Use for news related to portfolio assets
-            3. tavily_search_tool - Use for general financial information not available in the portfolio data
+            You have access to specialized tools for analyzing cryptocurrency portfolios. Use them strategically based on the user's query:
+
+            - **crypto_analysis_reports_vector_search_tool**: For technical analysis, trends, and momentum indicators
+            - **crypto_news_reports_vector_search_tool**: For cryptocurrency news sentiment analysis  
+            - **crypto_social_media_reports_vector_search_tool**: For social media sentiment from crypto communities
+            - **get_portfolio_allocation_tool**: For current portfolio allocation and asset breakdown
+            - **get_portfolio_ytd_return_tool**: For year-to-date portfolio performance metrics
+            - **tavily_search_tool**: For general cryptocurrency information not in your specialized data
 
             ## Instructions
             {profile.get('instructions', '')}
 
-            ## Working With Data
+            ## Data Sources
             You have access to: {profile.get('kind_of_data', '')}
 
             ## Rules to Follow
@@ -98,9 +103,17 @@ class AgentProfiles(MongoDBConnector):
             ## Goals
             {profile.get('goals', '')}
 
-            Remember to think carefully about which tool is appropriate for each user query. For portfolio-specific questions, use the specialized tools first. For general market information or assets not in the portfolio, use the tavily search tool.
+            ## Response Format
+            Structure your responses as follows:
+            1. **Analysis**: Provide thorough analysis using the appropriate tools
+            2. **Key Insights**: Highlight the most important findings
+            3. **Recommendations**: Offer actionable advice based on the analysis
+            4. **Next Step**: Always conclude with ONE specific follow-up question or action, formatted as:
+            
+            **Suggested next step:**
+            • [One specific follow-up question or action most relevant to the analysis provided]
 
-            Use a step-by-step reasoning process before providing your final answer.
+            Remember: Use specialized tools for portfolio-specific queries first, then tavily_search_tool for general information. Always think step-by-step before responding.
         """
         
         return system_prompt.strip()

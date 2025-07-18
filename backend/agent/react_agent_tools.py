@@ -25,61 +25,67 @@ embedding_model_id = os.getenv("EMBEDDINGS_MODEL_ID", "voyage-finance-2")
 ve = VogayeAIEmbeddings(api_key=os.getenv("VOYAGE_API_KEY"))
 
 # Getting environment variables for MongoDB collections
-MARKET_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_MARKET_ANALYSIS", "reports_market_analysis")
-NEWS_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_MARKET_NEWS", "reports_market_news")
+CRYPTO_ANALYSIS_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_CRYPTO_ANALYSIS", "reports_crypto_analysis")
+CRYPTO_NEWS_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_CRYPTO_NEWS", "reports_crypto_news")
+CRYPTO_SM_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_CRYPTO_SM", "reports_crypto_sm")
+PORTFOLIO_ALLOCATION_COLLECTION_NAME = os.getenv("CRYPTO_PORTFOLIO_ALLOCATION_COLLECTION", "crypto_portfolio_allocation")
 PORTFOLIO_PERFORMANCE_COLLECTION_NAME = os.getenv("PORTFOLIO_PERFORMANCE_COLLECTION", "portfolio_performance")
 
 # Initialize MongoDB connector
 mongodb_connector = MongoDBConnector()
 
-# Get the collections for market and news reports
-market_reports_collection = mongodb_connector.get_collection(collection_name=MARKET_COLLECTION_NAME)
-news_reports_collection = mongodb_connector.get_collection(collection_name=NEWS_COLLECTION_NAME)
+# Get the collections for crypto reports
+crypto_analysis_collection = mongodb_connector.get_collection(collection_name=CRYPTO_ANALYSIS_COLLECTION_NAME)
+crypto_news_collection = mongodb_connector.get_collection(collection_name=CRYPTO_NEWS_COLLECTION_NAME)
+crypto_sm_collection = mongodb_connector.get_collection(collection_name=CRYPTO_SM_COLLECTION_NAME)
 
-# Get portfolio performance collection
+# Get portfolio allocation and performance collections
+portfolio_allocation_collection = mongodb_connector.get_collection(collection_name=PORTFOLIO_ALLOCATION_COLLECTION_NAME)
 portfolio_performance_collection = mongodb_connector.get_collection(PORTFOLIO_PERFORMANCE_COLLECTION_NAME)
 
 # Getting environment variables for vector index names
-REPORT_MARKET_ANALISYS_VECTOR_INDEX_NAME = os.getenv("REPORT_MARKET_ANALISYS_VECTOR_INDEX_NAME")
-REPORT_MARKET_NEWS_VECTOR_INDEX_NAME = os.getenv("REPORT_MARKET_NEWS_VECTOR_INDEX_NAME")
+REPORT_CRYPTO_ANALYSIS_VECTOR_INDEX_NAME = os.getenv("REPORT_CRYPTO_ANALYSIS_VECTOR_INDEX_NAME")
+REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME = os.getenv("REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME")
+REPORT_CRYPTO_SM_VECTOR_INDEX_NAME = os.getenv("REPORT_CRYPTO_SM_VECTOR_INDEX_NAME")
 
 # Getting environment variables for vector field names
 REPORT_VECTOR_FIELD = os.getenv("REPORT_VECTOR_FIELD", "report_embedding")
 
 
 @tool
-def market_analysis_reports_vector_search_tool(query: str, k: int = 1):
+def crypto_analysis_reports_vector_search_tool(query: str, k: int = 1):
     """
-    Perform a vector similarity search on market analysis reports for the CURRENT PORTFOLIO.
+    Perform a vector similarity search on crypto analysis reports for the CURRENT CRYPTO PORTFOLIO.
 
-    IMPORTANT: This tool provides market analysis ONLY for assets included in the current portfolio allocation.  
+    IMPORTANT: This tool provides crypto technical analysis ONLY for assets included in the current crypto portfolio allocation.  
     If someone requests real-time data or live updates for assets outside the current portfolio, use the Tavily Search tool instead.
 
     Use this tool when you need:
-    - Market trends and analysis for portfolio assets
-    - Insights on recent portfolio performance
-    - Macroeconomic factors affecting the current portfolio
-    - Asset-specific diagnostics for portfolio holdings
+    - Crypto trends and momentum analysis for portfolio assets
+    - Technical indicators for crypto assets (RSI, moving averages, etc.)
+    - Insights on recent crypto portfolio performance
+    - Crypto-specific diagnostics for portfolio holdings
+    - Market volatility analysis for cryptocurrency assets
 
     Args:
-        query (str): The search query related to portfolio assets, market trends, etc.
+        query (str): The search query related to crypto portfolio assets, trends, momentum, etc.
         k (int, optional): The number of top results to return. Defaults to 1.
 
     Returns:
-        dict: Contains relevant sections from the most recent market analysis report
+        dict: Contains relevant sections from the most recent crypto analysis report
               for the current portfolio.
     """
     try:
-        logger.info(f"Searching portfolio market analysis for: {query}")
+        logger.info(f"Searching crypto portfolio analysis for: {query}")
         
         # Get the most recent document for context information
-        most_recent = market_reports_collection.find_one(
+        most_recent = crypto_analysis_collection.find_one(
             {}, 
             sort=[("timestamp", -1)]
         )
         
         if not most_recent:
-            return {"results": "No market analysis reports found for the current portfolio."}
+            return {"results": "No crypto analysis reports found for the current portfolio."}
         
         # Extract the date of the most recent report
         report_date = most_recent.get("date_string", "Unknown date")
@@ -87,13 +93,10 @@ def market_analysis_reports_vector_search_tool(query: str, k: int = 1):
         # Get portfolio assets list for context
         portfolio_assets = []
         try:
-            for allocation in most_recent.get("portfolio_allocation", []):
-                asset = allocation.get("asset", "Unknown")
-                description = allocation.get("description", "")
-                allocation_pct = allocation.get("allocation_percentage", "")
-                portfolio_assets.append(f"{asset} ({description}): {allocation_pct}")
+            portfolio_allocation = portfolio_allocation_collection.find({})
+            portfolio_assets = [asset.get("symbol", "Unknown") for asset in portfolio_allocation]
         except Exception as e:
-            logger.error(f"Error extracting portfolio information: {e}")
+            logger.warning(f"Could not retrieve portfolio assets: {str(e)}")
 
         # Generate query embedding
         query_embedding = ve.get_embeddings(model_id=embedding_model_id, text=query)
@@ -102,146 +105,80 @@ def market_analysis_reports_vector_search_tool(query: str, k: int = 1):
         pipeline = [
             {
                 "$vectorSearch": {
-                    "index": f"{REPORT_MARKET_ANALISYS_VECTOR_INDEX_NAME}",
-                    "path": REPORT_VECTOR_FIELD,
+                    "index": f"{REPORT_CRYPTO_ANALYSIS_VECTOR_INDEX_NAME}",
+                    "path": f"{REPORT_VECTOR_FIELD}",
                     "queryVector": query_embedding,
-                    "numCandidates": 5,
-                    "limit": k + 3  # Get more candidates for re-ranking
-                }
-            },
-            {
-                "$project": {
-                    "_id": 0,
-                    "date_string": 1,
-                    "report": 1,
-                    "timestamp": 1,
-                    "score": {"$meta": "vectorSearchScore"}
+                    "numCandidates": 50,
+                    "limit": k
                 }
             }
         ]
         
-        results = list(market_reports_collection.aggregate(pipeline))
+        results = list(crypto_analysis_collection.aggregate(pipeline))
         
-        # If no results from vector search, just return the most recent document
         if not results:
-            # Return most recent document info
-            overall_diagnosis = most_recent.get("report", {}).get("overall_diagnosis", "No diagnosis available")
-            asset_trends = most_recent.get("report", {}).get("asset_trends", [])
-            asset_insights = []
-            
-            for trend in asset_trends:
-                asset = trend.get("asset", "Unknown")
-                diagnosis = trend.get("diagnosis", "No diagnosis")
-                asset_insights.append(f"{asset}: {diagnosis}")
-            
-            return {
-                "report_date": report_date,
-                "portfolio_assets": portfolio_assets,
-                "overall_diagnosis": overall_diagnosis,
-                "asset_insights": asset_insights,
-                "note": "This is the most recent market analysis for your portfolio."
-            }
+            return {"results": "No matching crypto analysis found for your query."}
         
-        # Re-rank results by combining vector similarity score with recency
-        now = datetime.datetime.now(datetime.timezone.utc)
-        
-        # Make sure most recent is always in the results
-        most_recent_in_results = False
-        most_recent_id_str = str(most_recent.get("_id", ""))
-        
+        # Format results for the agent
+        formatted_results = []
         for result in results:
-            # Check if this is the most recent document
-            if result.get("date_string") == most_recent.get("date_string"):
-                most_recent_in_results = True
-                
-            # Calculate time difference in days (newer = higher score)
-            result_timestamp = result.get("timestamp", now)
-            if isinstance(result_timestamp, str):
-                try:
-                    result_timestamp = datetime.datetime.fromisoformat(result_timestamp.replace('Z', '+00:00'))
-                except:
-                    result_timestamp = now
-                    
-            days_old = (now - result_timestamp).total_seconds() / (24 * 3600) if hasattr(result_timestamp, 'total_seconds') else 30
-            
-            # Calculate recency score (1.0 for current, approaches 0 as it gets older)
-            recency_score = 1.0 / (1.0 + days_old)
-            
-            # Get vector similarity score (normalize it to 0-1 range)
-            similarity_score = result.get("score", 0.0)
-            
-            # Combined score with weights (adjust weights as needed)
-            vector_weight = 0.3  # Reduce this to give less weight to semantic similarity
-            recency_weight = 0.7  # Increase this to give more weight to recency
-            
-            # Calculate combined score
-            combined_score = (vector_weight * similarity_score) + (recency_weight * recency_score)
-            result["combined_score"] = combined_score
+            report = result.get("report", {})
+            formatted_result = {
+                "date": result.get("date_string", report_date),
+                "crypto_trends": report.get("crypto_trends", []),
+                "momentum_indicators": report.get("crypto_momentum_indicators", []),
+                "overall_diagnosis": report.get("overall_diagnosis", ""),
+                "portfolio_assets": portfolio_assets
+            }
+            formatted_results.append(formatted_result)
         
-        # If most recent isn't in results, add it
-        if not most_recent_in_results:
-            most_recent["combined_score"] = 1.0  # Give it a high score
-            most_recent["score"] = 0.5  # Neutral semantic score
-            results.append(most_recent)
-        
-        # Sort results by combined score
-        results = sorted(results, key=lambda x: x.get("combined_score", 0.0), reverse=True)
-        
-        # Process best result (highest combined score)
-        report_data = results[0]
-        overall_diagnosis = report_data.get("report", {}).get("overall_diagnosis", "No diagnosis available")
-        
-        # Format the return data
         return {
-            "report_date": report_date,
-            "portfolio_assets": portfolio_assets[:5],  # Show top 5 portfolio assets
-            "overall_diagnosis": overall_diagnosis,
-            "note": "This information is from the most relevant and recent portfolio market analysis."
+            "results": formatted_results,
+            "portfolio_context": f"Analysis for crypto portfolio containing: {', '.join(portfolio_assets)}",
+            "report_date": report_date
         }
         
     except Exception as e:
-        logger.error(f"Error searching portfolio market reports: {str(e)}")
-        return {"error": f"An error occurred: {str(e)}"}
-    
-@tool
-def market_news_reports_vector_search_tool(query: str, k: int = 1):
-    """
-    Perform a vector similarity search on market news reports for the CURRENT PORTFOLIO.
+        logger.error(f"Error in crypto_analysis_reports_vector_search_tool: {str(e)}")
+        return {"results": f"Error searching crypto analysis reports: {str(e)}"}
 
-    IMPORTANT: This tool provides market news summaries and insights ONLY for assets included in the current portfolio allocation.  
+
+@tool
+def crypto_news_reports_vector_search_tool(query: str, k: int = 1):
+    """
+    Perform a vector similarity search on crypto news reports for the CURRENT CRYPTO PORTFOLIO.
+
+    IMPORTANT: This tool provides crypto news summaries and sentiment analysis ONLY for assets included in the current crypto portfolio allocation.  
     Note that it DOES NOT offer real-time data or live updates.  
 
     When possible, include links to the original news articles at the end of the summary for reference.  
     If someone requests real-time data or information on assets not in the current portfolio, use the Tavily Search tool instead.
 
     Use this tool when you need:
-    - Recent news affecting portfolio assets
-    - Sentiment analysis for portfolio holdings
-    - News summaries for specific assets in the portfolio
-    - An overview of the news impact on the current portfolio
+    - Recent crypto news affecting portfolio assets
+    - Sentiment analysis for crypto portfolio holdings
+    - News summaries for specific crypto assets in the portfolio
+    - An overview of the news impact on the current crypto portfolio
 
     Args:
-        query (str): The search query related to portfolio assets.
+        query (str): The search query related to crypto portfolio assets.
         k (int, optional): The number of top results to return. Defaults to 1.
 
     Returns:
-        dict: Contains relevant news summaries from the most recent reports
+        dict: Contains relevant news summaries from the most recent crypto news reports
               for the current portfolio.
     """
     try:
-        logger.info(f"Searching portfolio news reports for: {query}")
+        logger.info(f"Searching crypto news reports for: {query}")
         
-        # Get the most recent document for context information only
-        most_recent = news_reports_collection.find_one(
+        # Get the most recent document for context information
+        most_recent = crypto_news_collection.find_one(
             {}, 
             sort=[("timestamp", -1)]
         )
         
         if not most_recent:
-            return {"results": "No news reports found for the current portfolio."}
-        
-        # Generate query embedding
-        query_embedding = ve.get_embeddings(model_id=embedding_model_id, text=query)
+            return {"results": "No crypto news reports found for the current portfolio."}
         
         # Extract the date of the most recent report
         report_date = most_recent.get("date_string", "Unknown date")
@@ -249,285 +186,236 @@ def market_news_reports_vector_search_tool(query: str, k: int = 1):
         # Get portfolio assets list for context
         portfolio_assets = []
         try:
-            for allocation in most_recent.get("portfolio_allocation", []):
-                asset = allocation.get("asset", "Unknown")
-                description = allocation.get("description", "")
-                allocation_pct = allocation.get("allocation_percentage", "")
-                portfolio_assets.append(f"{asset} ({description}): {allocation_pct}")
+            portfolio_allocation = portfolio_allocation_collection.find({})
+            portfolio_assets = [asset.get("symbol", "Unknown") for asset in portfolio_allocation]
         except Exception as e:
-            logger.error(f"Error extracting portfolio information: {e}")
+            logger.warning(f"Could not retrieve portfolio assets: {str(e)}")
+
+        # Generate query embedding
+        query_embedding = ve.get_embeddings(model_id=embedding_model_id, text=query)
         
         # Perform vector search across all documents
         pipeline = [
             {
                 "$vectorSearch": {
-                    "index": f"{REPORT_MARKET_NEWS_VECTOR_INDEX_NAME}",
-                    "path": REPORT_VECTOR_FIELD,
+                    "index": f"{REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME}",
+                    "path": f"{REPORT_VECTOR_FIELD}",
                     "queryVector": query_embedding,
-                    "numCandidates": 5,
-                    "limit": k + 3  # Get more candidates for re-ranking
-                }
-            },
-            {
-                "$project": {
-                    "_id": 0,
-                    "date_string": 1,
-                    "report": 1,
-                    "timestamp": 1,
-                    "score": {"$meta": "vectorSearchScore"}
+                    "numCandidates": 50,
+                    "limit": k
                 }
             }
         ]
         
-        results = list(news_reports_collection.aggregate(pipeline))
+        results = list(crypto_news_collection.aggregate(pipeline))
         
-        # If no results from vector search, just return the most recent document
         if not results:
-            # Extract relevant information
-            overall_diagnosis = most_recent.get("report", {}).get("overall_news_diagnosis", "No news diagnosis available")
-            asset_news_summaries = most_recent.get("report", {}).get("asset_news_summary", [])
-            
-            # Format asset news summary information
-            news_summaries = []
-            for summary in asset_news_summaries:
-                asset = summary.get("asset", "Unknown")
-                summary_text = summary.get("summary", "No summary available")
-                sentiment = summary.get("overall_sentiment_category", "Unknown")
-                news_summaries.append(f"{asset} ({sentiment}): {summary_text}")
-            
-            return {
-                "report_date": report_date,
-                "portfolio_assets": portfolio_assets,
-                "overall_diagnosis": overall_diagnosis,
-                "news_summaries": news_summaries,
-                "note": "This is the most recent news report for your portfolio."
-            }
+            return {"results": "No matching crypto news found for your query."}
         
-        # Re-rank results by combining vector similarity score with recency
-        now = datetime.datetime.utcnow()
-        
-        # Make sure most recent is always in the results
-        most_recent_in_results = False
-        most_recent_id_str = str(most_recent.get("_id", ""))
-        
+        # Format results for the agent
+        formatted_results = []
         for result in results:
-            # Check if this is the most recent document
-            if result.get("date_string") == most_recent.get("date_string"):
-                most_recent_in_results = True
-                
-            # Calculate time difference in days (newer = higher score)
-            result_timestamp = result.get("timestamp", now)
-            if isinstance(result_timestamp, str):
-                try:
-                    result_timestamp = datetime.datetime.fromisoformat(result_timestamp.replace('Z', '+00:00'))
-                except:
-                    result_timestamp = now
-                    
-            days_old = (now - result_timestamp).total_seconds() / (24 * 3600) if hasattr(result_timestamp, 'total_seconds') else 30
-            
-            # Calculate recency score (1.0 for current, approaches 0 as it gets older)
-            recency_score = 1.0 / (1.0 + days_old)
-            
-            # Get vector similarity score (normalize it to 0-1 range)
-            similarity_score = result.get("score", 0.0)
-            
-            # Combined score with weights (adjust weights as needed)
-            vector_weight = 0.3  # Reduce this to give less weight to semantic similarity
-            recency_weight = 0.7  # Increase this to give more weight to recency
-            
-            # Calculate combined score
-            combined_score = (vector_weight * similarity_score) + (recency_weight * recency_score)
-            result["combined_score"] = combined_score
+            report = result.get("report", {})
+            formatted_result = {
+                "date": result.get("date_string", report_date),
+                "asset_news": report.get("asset_news", []),
+                "news_sentiments": report.get("asset_news_sentiments", []),
+                "overall_news_diagnosis": report.get("overall_news_diagnosis", ""),
+                "portfolio_assets": portfolio_assets
+            }
+            formatted_results.append(formatted_result)
         
-        # If most recent isn't in results, add it
-        if not most_recent_in_results:
-            most_recent["combined_score"] = 1.0  # Give it a high score
-            most_recent["score"] = 0.5  # Neutral semantic score
-            results.append(most_recent)
-        
-        # Sort results by combined score
-        results = sorted(results, key=lambda x: x.get("combined_score", 0.0), reverse=True)
-        
-        # Process best result (highest combined score)
-        report_data = results[0]
-        report = report_data.get("report", {})
-        overall_diagnosis = report.get("overall_news_diagnosis", "No news diagnosis available")
-        asset_news_summaries = report.get("asset_news_summary", [])
-        
-        # Format news summaries
-        news_summaries = []
-        for summary in asset_news_summaries:
-            asset = summary.get("asset", "Unknown")
-            summary_text = summary.get("summary", "No summary available")
-            sentiment = summary.get("overall_sentiment_category", "Unknown")
-            news_summaries.append(f"{asset} ({sentiment}): {summary_text}")
-        
-        # Format the return data
         return {
-            "report_date": report_date,
-            "portfolio_assets": portfolio_assets[:5],  # Show top 5 portfolio assets
-            "overall_diagnosis": overall_diagnosis,
-            "news_summaries": news_summaries,
-            "note": "This information is from the most relevant and recent portfolio news reports."
+            "results": formatted_results,
+            "portfolio_context": f"News analysis for crypto portfolio containing: {', '.join(portfolio_assets)}",
+            "report_date": report_date
         }
         
     except Exception as e:
-        logger.error(f"Error searching portfolio news reports: {str(e)}")
-        return {"error": f"An error occurred: {str(e)}"}
-    
-@tool
-def get_vix_closing_value_tool(query: str) -> str:
-    """
-    Get the most recent closing value of the VIX index.
+        logger.error(f"Error in crypto_news_reports_vector_search_tool: {str(e)}")
+        return {"results": f"Error searching crypto news reports: {str(e)}"}
 
-    IMPORTANT: This tool provides the VIX index closing value.
+
+@tool
+def crypto_social_media_reports_vector_search_tool(query: str, k: int = 1):
+    """
+    Perform a vector similarity search on crypto social media sentiment reports for the CURRENT CRYPTO PORTFOLIO.
+
+    IMPORTANT: This tool provides crypto social media sentiment analysis ONLY for assets included in the current crypto portfolio allocation.  
+    Social media sentiment is crucial for cryptocurrency investment decisions as it reflects community perception and market sentiment.
 
     Use this tool when you need:
-    - VIX index closing value OR VIX closing value today.
+    - Social media sentiment analysis for crypto portfolio assets
+    - Community perception and discussions about portfolio holdings
+    - Reddit, Twitter, and other social platform sentiment
+    - Social media-driven market sentiment for crypto assets
+    - Community-based insights affecting portfolio assets
 
     Args:
-        query (str): The search query related to VIX index closing value.
-    
+        query (str): The search query related to crypto social media sentiment.
+        k (int, optional): The number of top results to return. Defaults to 1.
+
     Returns:
-        str: VIX index closing value answer.
+        dict: Contains relevant social media sentiment analysis from the most recent reports
+              for the current crypto portfolio.
     """
     try:
-        # Log the query
-        logger.info(f"Fetching VIX index closing because of query: {query}")
-
+        logger.info(f"Searching crypto social media sentiment for: {query}")
+        
         # Get the most recent document for context information
-        most_recent = market_reports_collection.find_one(
+        most_recent = crypto_sm_collection.find_one(
             {}, 
             sort=[("timestamp", -1)]
         )
         
         if not most_recent:
-            return "VIX closing value not available. No market analysis reports found."
+            return {"results": "No crypto social media sentiment reports found for the current portfolio."}
         
         # Extract the date of the most recent report
-        report = most_recent.get("report", {})
-        vix_closing_value = report.get("market_volatility_index", {}).get("fluctuation_answer", "")
+        report_date = most_recent.get("date_string", "Unknown date")
         
-        # Extract only the VIX close price part
-        if "VIX close price is" in vix_closing_value:
-            # Parse just the "VIX close price is X.XX" part
-            vix_part = vix_closing_value.split("(")[0].strip()
-            return vix_part
-        else:
-            return "VIX closing value is not available in the expected format."
+        # Get portfolio assets list for context
+        portfolio_assets = []
+        try:
+            portfolio_allocation = portfolio_allocation_collection.find({})
+            portfolio_assets = [asset.get("symbol", "Unknown") for asset in portfolio_allocation]
+        except Exception as e:
+            logger.warning(f"Could not retrieve portfolio assets: {str(e)}")
 
+        # Generate query embedding
+        query_embedding = ve.get_embeddings(model_id=embedding_model_id, text=query)
+        
+        # Perform vector search across all documents
+        pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": f"{REPORT_CRYPTO_SM_VECTOR_INDEX_NAME}",
+                    "path": f"{REPORT_VECTOR_FIELD}",
+                    "queryVector": query_embedding,
+                    "numCandidates": 50,
+                    "limit": k
+                }
+            }
+        ]
+        
+        results = list(crypto_sm_collection.aggregate(pipeline))
+        
+        if not results:
+            return {"results": "No matching crypto social media sentiment found for your query."}
+        
+        # Format results for the agent
+        formatted_results = []
+        for result in results:
+            report = result.get("report", {})
+            formatted_result = {
+                "date": result.get("date_string", report_date),
+                "asset_subreddits": report.get("asset_subreddits", []),
+                "social_media_sentiments": report.get("asset_sm_sentiments", []),
+                "overall_social_diagnosis": report.get("overall_news_diagnosis", ""),
+                "portfolio_assets": portfolio_assets
+            }
+            formatted_results.append(formatted_result)
+        
+        return {
+            "results": formatted_results,
+            "portfolio_context": f"Social media sentiment for crypto portfolio containing: {', '.join(portfolio_assets)}",
+            "report_date": report_date
+        }
+        
     except Exception as e:
-        logger.error(f"Error fetching VIX index closing value: {str(e)}")
-        return f"Unable to retrieve VIX closing value: {str(e)}"
-    
+        logger.error(f"Error in crypto_social_media_reports_vector_search_tool: {str(e)}")
+        return {"results": f"Error searching crypto social media reports: {str(e)}"}
+
 
 @tool
 def get_portfolio_allocation_tool(query: str) -> dict:
-    """Get the most recent portfolio allocation.
+    """Get the most recent crypto portfolio allocation.
 
-    IMPORTANT: This tool provides the most recent portfolio allocation.
+    IMPORTANT: This tool provides the most recent crypto portfolio allocation.
 
     Use this tool when you need:
-    - Portfolio allocation for the current portfolio.
-    - Asset distribution information
-    - Current investment breakdown
+    - Crypto portfolio allocation for the current portfolio
+    - Digital asset distribution information
+    - Current cryptocurrency investment breakdown
+    - Asset types (Cryptocurrency vs Stablecoin)
 
     Args:
-        query (str): The search query related to portfolio allocation.
+        query (str): The search query related to crypto portfolio allocation.
 
     Returns:
-        dict: Portfolio allocation showing assets, descriptions, and percentages.
+        dict: Crypto portfolio allocation showing assets, descriptions, and percentages.
     """
     try:
-        # Log the query
-        logger.info(f"Fetching portfolio allocation because of query: {query}")
-
-        # Get the most recent document for context information
-        most_recent = market_reports_collection.find_one(
-            {}, 
-            sort=[("timestamp", -1)]
-        )
+        logger.info(f"Getting crypto portfolio allocation for: {query}")
         
-        if not most_recent:
-            return {"error": "Portfolio allocation not available. No market analysis reports found."}
-        
-        # Extract the portfolio allocation data
-        portfolio_allocation = most_recent.get("portfolio_allocation", [])
+        # Get all portfolio allocation documents
+        portfolio_allocation = list(portfolio_allocation_collection.find({}))
         
         if not portfolio_allocation:
-            return {"error": "Portfolio allocation data not found in the most recent report."}
+            return {"results": "No crypto portfolio allocation found."}
         
-        # Return the simplified portfolio allocation data
+        # Format the allocation data
+        formatted_allocation = []
+        for asset in portfolio_allocation:
+            formatted_asset = {
+                "symbol": asset.get("symbol", "Unknown"),
+                "description": asset.get("description", "Unknown"),
+                "allocation_percentage": asset.get("allocation_percentage", "0%"),
+                "allocation_number": asset.get("allocation_number", 0),
+                "asset_type": asset.get("asset_type", "Unknown"),
+                "binance_symbol": asset.get("binance_symbol", "Unknown")
+            }
+            formatted_allocation.append(formatted_asset)
+        
         return {
-            "portfolio_allocation": portfolio_allocation,
+            "results": formatted_allocation,
+            "total_assets": len(formatted_allocation),
+            "portfolio_type": "Cryptocurrency Portfolio"
         }
-    
+        
     except Exception as e:
-        logger.error(f"Error fetching portfolio allocation: {str(e)}")
-        return {"error": f"Unable to retrieve portfolio allocation: {str(e)}"}
-    
+        logger.error(f"Error in get_portfolio_allocation_tool: {str(e)}")
+        return {"results": f"Error retrieving crypto portfolio allocation: {str(e)}"}
+
 
 @tool
 def get_portfolio_ytd_return_tool(query: str) -> str:
     """
-    Get the Year-to-Date (YTD) rate of return for the portfolio.
+    Get the Year-to-Date (YTD) rate of return for the crypto portfolio.
 
-    IMPORTANT: This tool provides the YTD performance of the current portfolio.
+    IMPORTANT: This tool provides the YTD performance of the current crypto portfolio.
 
     Use this tool when you need:
-    - Year-to-date return of the portfolio
-    - YTD portfolio performance 
-    - How the portfolio has performed since the beginning of this year
+    - Year-to-date return of the crypto portfolio
+    - YTD crypto portfolio performance 
+    - How the crypto portfolio has performed since the beginning of this year
 
     Args:
-        query (str): The search query related to portfolio YTD return.
+        query (str): The search query related to crypto portfolio YTD return.
 
     Returns:
-        str: Portfolio YTD return percentage and information.
+        str: Crypto portfolio YTD return percentage and information.
     """
     try:
-        # Log the query
-        logger.info(f"Calculating portfolio YTD return for query: {query}")
+        logger.info(f"Getting crypto portfolio YTD return for: {query}")
         
-        # Get current date information
-        current_date = datetime.datetime.now()
-        current_year = current_date.year
-        
-        # Find the first trading day entry of the current year
-        start_of_year = datetime.datetime(current_year, 1, 1)
-        first_entry_of_year = portfolio_performance_collection.find_one(
-            {"date": {"$gte": start_of_year}},
-            sort=[("date", 1)]
-        )
-        
-        if not first_entry_of_year:
-            return "Could not find portfolio data for the current year."
-        
-        # Get the most recent entry
-        latest_entry = portfolio_performance_collection.find_one(
+        # Get the most recent performance document
+        most_recent = portfolio_performance_collection.find_one(
             {}, 
-            sort=[("date", -1)]
+            sort=[("_id", -1)]
         )
         
-        if not latest_entry:
-            return "Could not find recent portfolio performance data."
-            
-        # Extract start and end dates for better context
-        start_date = first_entry_of_year.get("date").strftime("%Y-%m-%d")
-        end_date = latest_entry.get("date").strftime("%Y-%m-%d")
+        if not most_recent:
+            return "No crypto portfolio performance data found."
         
-        # Extract cumulative returns
-        start_cumulative_return = first_entry_of_year.get("percentage_of_cumulative_return", 0)
-        end_cumulative_return = latest_entry.get("percentage_of_cumulative_return", 0)
+        # Extract the YTD return
+        ytd_return = most_recent.get("percentage_of_cumulative_return", 0)
         
-        # Calculate YTD return
-        ytd_return = end_cumulative_return - start_cumulative_return
+        # Convert to percentage format
+        ytd_return_percentage = round(ytd_return * 100, 2)
         
-        # Format the response with detailed information
-        return (f"The portfolio's YTD return from {start_date} to {end_date} is {ytd_return:.2f}%. "
-                f"(Starting cumulative return: {start_cumulative_return:.2f}%, "
-                f"Current cumulative return: {end_cumulative_return:.2f}%)")
+        return f"The current Year-to-Date (YTD) return for your crypto portfolio is {ytd_return_percentage}%."
         
     except Exception as e:
-        logger.error(f"Error calculating portfolio YTD return: {str(e)}")
-        return f"Unable to calculate YTD return: {str(e)}"
+        logger.error(f"Error in get_portfolio_ytd_return_tool: {str(e)}")
+        return f"Error retrieving crypto portfolio YTD return: {str(e)}"

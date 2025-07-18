@@ -79,24 +79,40 @@ class VectorSearchIndexCreator(MongoDBConnector):
 
 # Example usage
 if __name__ == "__main__":
-    market_analysis_collection_name = os.getenv("REPORTS_COLLECTION_MARKET_ANALYSIS")
-    market_news_collection_name = os.getenv("REPORTS_COLLECTION_MARKET_NEWS")
-    market_analysis_vector_index_name = os.getenv("REPORT_MARKET_ANALISYS_VECTOR_INDEX_NAME")
-    market_news_vector_index_name = os.getenv("REPORT_MARKET_NEWS_VECTOR_INDEX_NAME")
+
+    # Get environment variables
+
+    # Collection names for reports
+    crypto_analysis_collection_name = os.getenv("REPORTS_COLLECTION_CRYPTO_ANALYSIS")
+    crypto_news_collection_name = os.getenv("REPORTS_COLLECTION_CRYPTO_NEWS")
+    crypto_sm_collection_name = os.getenv("REPORTS_COLLECTION_CRYPTO_SM")
+    crypto_analysis_vector_index_name = os.getenv("REPORT_CRYPTO_ANALISYS_VECTOR_INDEX_NAME")
+    crypto_news_vector_index_name = os.getenv("REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME")
+    crypto_sm_vector_index_name = os.getenv("REPORT_CRYPTO_SM_VECTOR_INDEX_NAME")
+
+    # Vector field for reports
     report_vector_field = os.getenv("REPORT_VECTOR_FIELD")
 
-    # Create vector search index for market analysis
-    vs_idx = VectorSearchIndexCreator(collection_name=market_analysis_collection_name)
+    # Create vector search index for crypto analysis
+    vs_idx = VectorSearchIndexCreator(collection_name=crypto_analysis_collection_name)
     result = vs_idx.create_index(
-        index_name=market_analysis_vector_index_name,
+        index_name=crypto_analysis_vector_index_name,
         vector_field=report_vector_field
     )
     logger.info(result)
 
-    # Create vector search index for market news
-    vs_idx = VectorSearchIndexCreator(collection_name=market_news_collection_name)
+    # Create vector search index for crypto news
+    vs_idx = VectorSearchIndexCreator(collection_name=crypto_news_collection_name)
     result = vs_idx.create_index(
-        index_name=market_news_vector_index_name,
+        index_name=crypto_news_vector_index_name,
+        vector_field=report_vector_field
+    )
+    logger.info(result)
+
+    # Create vector search index for crypto social media
+    vs_idx = VectorSearchIndexCreator(collection_name=crypto_sm_collection_name)
+    result = vs_idx.create_index(
+        index_name=crypto_sm_vector_index_name,
         vector_field=report_vector_field
     )
     logger.info(result)
