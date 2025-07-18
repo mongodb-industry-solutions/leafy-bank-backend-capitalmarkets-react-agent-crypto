@@ -19,7 +19,7 @@ from langchain_core.messages import HumanMessage
 from agent.profiles import AgentProfiles
 
 # Tools
-from agent.react_agent_tools import tavily_search_tool, market_analysis_reports_vector_search_tool, market_news_reports_vector_search_tool, get_vix_closing_value_tool, get_portfolio_allocation_tool, get_portfolio_ytd_return_tool
+from agent.react_agent_tools import tavily_search_tool, crypto_analysis_reports_vector_search_tool, crypto_news_reports_vector_search_tool, crypto_social_media_reports_vector_search_tool, get_portfolio_allocation_tool, get_portfolio_ytd_return_tool
 
 # Initialize dotenv to load environment variables
 load_dotenv()
@@ -32,22 +32,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MarketAssistantReactAgent:
+class CryptoAssistantReactAgent:
     """
-    Service class for the Market Assistant React Agent.
+    Service class for the Crypto Assistant React Agent.
+    Provides methods for creating and managing chat sessions with the agent.
+    """
+    """
+    Service class for the Crypto Assistant React Agent.
     Provides methods for creating and managing chat sessions with the agent.
     """
     
     def __init__(self):
-        """Initialize the Market Assistant React Agent service."""
+        """Initialize the Crypto Assistant React Agent service."""
         # Load MongoDB configuration from environment variables
         self.mongodb_uri = os.getenv("MONGODB_URI")
         self.database_name = os.getenv("DATABASE_NAME")
-        self.checkpoints_collection = os.getenv("CHECKPOINTS_AIO_COLLECTION", "checkpoints_aio")
-        self.checkpoint_writes_collection = os.getenv("CHECKPOINTS_WRITES_AIO_COLLECTION", "checkpoint_writes_aio")
+        self.checkpoints_collection = os.getenv("CHECKPOINTS_AIO_COLLECTION", "crypto_checkpoints_aio")
+        self.checkpoint_writes_collection = os.getenv("CHECKPOINTS_WRITES_AIO_COLLECTION", "crypto_checkpoint_writes_aio")
 
         # Get system prompt from AgentProfiles
-        self.agent_id = "MARKET_ASSISTANT_AGENT"
+        self.agent_id = "CRYPTO_ASSISTANT_AGENT"
         # Generate initial prompt
         self.profiler = AgentProfiles()
         self.prompt = self.profiler.generate_system_prompt(agent_id=self.agent_id)
@@ -72,16 +76,16 @@ class MarketAssistantReactAgent:
             prompt=self.prompt,
             tools=[
                 tavily_search_tool,
-                market_analysis_reports_vector_search_tool,
-                market_news_reports_vector_search_tool,
-                get_vix_closing_value_tool,
+                crypto_analysis_reports_vector_search_tool,
+                crypto_news_reports_vector_search_tool,
+                crypto_social_media_reports_vector_search_tool,
                 get_portfolio_allocation_tool,
                 get_portfolio_ytd_return_tool
             ],
             checkpointer=self.memory
         )
         
-        logger.info("MarketAssistantReactAgent initialized with LangGraph agent and tools")
+        logger.info("CryptoAssistantReactAgent initialized with LangGraph agent and tools")
 
     @staticmethod
     async def generate_thread_id():

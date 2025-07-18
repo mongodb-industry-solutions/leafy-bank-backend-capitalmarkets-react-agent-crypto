@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "your-virtual-env"
 version = "0.1.0"
-description = "This repository hosts the backend for the Capital Markets React Agent Chatbot."
+description = "This repository hosts the backend for the Capital Markets React Agent Crypto Assistant."
 authors = ["Julian Boronat <julian.boronat@mongodb.com>"]
 readme = "README.md"
 

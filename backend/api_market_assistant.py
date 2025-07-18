@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 market_assistant_service = MarketAssistantReactAgent()
 
 # Create the router
-router = APIRouter(prefix="/market-assistant", tags=["Market Assistant"])
+router = APIRouter(prefix="/crypto-assistant", tags=["Crypto Assistant"])
 
 # Models for request/response
 class MessageRequest(BaseModel):

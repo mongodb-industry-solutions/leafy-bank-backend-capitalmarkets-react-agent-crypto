@@ -1,6 +1,6 @@
-# Capital Markets - Market Assistant ReAct Agent Chatbot Service
+# Capital Markets - Crypto Assistant ReAct Agent Chatbot Service
 
-This repository hosts the backend for the **Capital Markets - Market Assistant ReAct Agent Chatbot Service** service. The service provides insights and recommendations for capital markets using a LangGraph ReAct agent, leveraging MongoDB Atlas for data storage, vector search, and agent state management.
+This repository hosts the backend for the **Capital Markets - Crypto Assistant ReAct Agent Chatbot Service** service. The service provides insights and recommendations for capital markets using a LangGraph ReAct agent, leveraging MongoDB Atlas for data storage, vector search, and agent state management.
 
 ## High Level Architecture
 
@@ -20,12 +20,12 @@ This repository hosts the backend for the **Capital Markets - Market Assistant R
 ![ReAct Pattern](architecture/react_pattern.png)
 
 > [!NOTE]
-> The agent uses memory to store past observations and actions, which is valuable for more complex tasks. For our use case, we implement the ReAct pattern to build a **Market Assistant Agent** that analyzes market data and news articles, providing insights and recommendations to users.
+> The agent uses memory to store past observations and actions, which is valuable for more complex tasks. For our use case, we implement the ReAct pattern to build a **Crypto Assistant Agent** that analyzes market data and news articles, providing insights and recommendations to users.
 
 -  **Long-term [memory](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/#memory)**: The agent stores and recalls information from previous interactions, building a comprehensive understanding of the user's needs and preferences. We utilize **Checkpointers** as a mechanism to store state at every step across different interactions, implemented with the [MongoDB checkpointer](https://langchain-ai.github.io/langgraph/how-tos/persistence_mongodb/) component of LangGraph.
    -  Two main collections support the checkpointer:
-      -  `checkpoints_aio`
-      -  `checkpoint_writes_aio` 
+      -  `crypto_checkpoints_aio`
+      -  `crypto_checkpoint_writes_aio` 
 
 -  **Agent Profile**: The agent is configured with a profile that defines its role, instructions, and rules. This profile is stored in MongoDB and can be easily modified to change the agent's behavior. The agent profile is stored in the `agent_profiles` collection.  
 
@@ -46,9 +46,9 @@ The service is built on a modular foundation using:
 -  **LangGraph**: For utilizing the [prebuilt ReAct agent](https://langchain-ai.github.io/langgraph/how-tos/create-react-agent/)
 -  **FastAPI**: For reliable, documented API endpoints
 
-## Market Assistant Agent
+## Crypto Assistant Agent
 
-The **Market Assistant Agent** serves as an intelligent financial advisor that analyzes user queries, fetches relevant financial data, and presents actionable insights. Let's explore how this system works from query to response.
+The **Crypto Assistant Agent** serves as an intelligent financial advisor that analyzes user queries, fetches relevant financial data, and presents actionable insights. Let's explore how this system works from query to response.
 
 ### Agent Flow and Interaction Model
 
@@ -82,10 +82,10 @@ Throughout this process, the agent maintains a conversation state in MongoDB, en
 
 ### Agent Memory Management
 
-The Market Assistant Agent uses MongoDB as a long-term memory store to maintain context across conversation sessions:
+The Crypto Assistant Agent uses MongoDB as a long-term memory store to maintain context across conversation sessions:
 
 - **Memory Storage:**  
-  Two key collections—`checkpoints_aio` and `checkpoint_writes_aio`—store the complete state of agent interactions, including reasoning steps, tool calls, and observations.
+  Two key collections—`crypto_checkpoints_aio` and `crypto_checkpoint_writes_aio`—store the complete state of agent interactions, including reasoning steps, tool calls, and observations.
 
 - **Memory Structure:**  
   Each conversation is organized by a unique `thread_id` that includes a timestamp (format: `thread_YYYYMMDD_HHMMSS`). This allows for organized memory retrieval and management.
@@ -101,7 +101,7 @@ This memory management approach balances the benefits of persistent conversation
 
 ### Agent Tools
 
-The Market Assistant ReAct Agent leverages specialized tools to access and analyze financial data from various sources. These tools maintain clear boundaries between portfolio-specific analysis and general financial information.
+The Crypto Assistant ReAct Agent leverages specialized tools to access and analyze financial data from various sources. These tools maintain clear boundaries between portfolio-specific analysis and general financial information.
 
 #### Portfolio-Specific Tools
 
@@ -226,8 +226,8 @@ Before you begin, ensure you have met the following requirements:
    - `reports_market_news` (for storing market news reports)
    - `portfolio_allocation` (for storing portfolio allocation data)
    - `portfolio_performance` (for storing portfolio performance data) 
-   - `checkpoints_aio` (for storing agent state checkpoints)
-   - `checkpoint_writes_aio` (for storing agent state checkpoint writes)
+   - `crypto_checkpoints_aio` (for storing agent state checkpoints)
+   - `crypto_checkpoint_writes_aio` (for storing agent state checkpoint writes)
 
 ### Step 1b: Set Up Vector Search Index
 
@@ -252,8 +252,8 @@ Follow [MongoDB's guide](https://www.mongodb.com/docs/atlas/security-add-mongodb
 > CHAT_COMPLETIONS_MODEL_ID="anthropic.claude-3-haiku-20240307-v1:0"
 > EMBEDDINGS_MODEL_ID="voyage-finance-2"
 > AGENT_PROFILES_COLLECTION = "agent_profiles"
-> CHECKPOINTS_AIO_COLLECTION = "checkpoints_aio"
-> CHECKPOINTS_WRITES_AIO_COLLECTION = "checkpoint_writes_aio"
+> CHECKPOINTS_AIO_COLLECTION = "crypto_checkpoints_aio"
+> CHECKPOINTS_WRITES_AIO_COLLECTION = "crypto_checkpoint_writes_aio"
 > REPORTS_COLLECTION_MARKET_ANALYSIS = "reports_market_analysis"
 > REPORT_MARKET_ANALISYS_VECTOR_INDEX_NAME = "reports_market_analysis_report_embedding_index"
 > REPORTS_COLLECTION_MARKET_NEWS = "reports_market_news"
@@ -313,7 +313,7 @@ E.g. `http://localhost:8006/docs`
 > [!TIP]
 > **Run the Chatbot Directly from the Console**
 >
-> You can interact with the Market Assistant Agent directly from your terminal using the built-in console interface:
+> You can interact with the Crypto Assistant Agent directly from your terminal using the built-in console interface:
 >
 > ```bash
 > # Navigate to the backend directory

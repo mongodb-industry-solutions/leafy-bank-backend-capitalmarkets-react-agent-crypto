@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI, Request, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add market assistant API router
+# Add Crypto Assistant API router
 from api_market_assistant import router as market_assistant_router
 # Add checkpointer API router
 from api_checkpointer import router as checkpointer_router
@@ -30,7 +30,7 @@ router = APIRouter()
 async def read_root(request: Request):
     return {"message": "Server is running"}
 
-# Add the market assistant router to the main app
+# Add the Crypto Assistant router to the main app
 app.include_router(market_assistant_router)
 # Add the checkpointer router to the main app
 app.include_router(checkpointer_router)
