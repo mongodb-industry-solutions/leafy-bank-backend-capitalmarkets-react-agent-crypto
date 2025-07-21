@@ -33,15 +33,6 @@ logger = logging.getLogger(__name__)
 
 
 class CryptoAssistantReactAgent:
-    """
-    Service class for the Crypto Assistant React Agent.
-    Provides methods for creating and managing chat sessions with the agent.
-    """
-    """
-    Service class for the Crypto Assistant React Agent.
-    Provides methods for creating and managing chat sessions with the agent.
-    """
-    
     def __init__(self):
         """Initialize the Crypto Assistant React Agent service."""
         # Load MongoDB configuration from environment variables
@@ -68,7 +59,14 @@ class CryptoAssistantReactAgent:
         # Initialize async MongoDB client
         self.async_mongodb_client = AsyncMongoClient(self.mongodb_uri)
         self.async_mongodb_memory_collection = self.async_mongodb_client[self.database_name][self.checkpoints_collection]
-        self.memory = AsyncMongoDBSaver(client=self.async_mongodb_client, db_name=self.database_name)
+        
+        # Initialize memory with custom collection names
+        self.memory = AsyncMongoDBSaver(
+            client=self.async_mongodb_client, 
+            db_name=self.database_name,
+            checkpoint_collection_name=self.checkpoints_collection,
+            writes_collection_name=self.checkpoint_writes_collection
+        )
         
         # Create the agent with tools - done at initialization to avoid recreation
         self.langgraph_agent = create_react_agent(

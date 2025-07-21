@@ -18,7 +18,7 @@ router = APIRouter(prefix="/checkpointer", tags=["Checkpointer"])
 ## -- LOADER SCHEDULER -- ##
 ############################
 
-@router.post("/scheduler-overview")
+@router.get("/scheduler-overview")
 async def scheduler_overview():
     try:
         overview = str(scheduler.scheduler)
