@@ -194,7 +194,6 @@ The Crypto Assistant ReAct Agent leverages specialized tools to access and analy
 - [Poetry](https://python-poetry.org/) for dependency management and packaging.
 - [Uvicorn](https://www.uvicorn.org/) for ASGI server implementation.
 - [Docker](https://www.docker.com/) for containerization.
-- [Rich](https://rich.readthedocs.io/) for enhanced CLI output and logging.
 
 ## Relevant Python Packages
 
