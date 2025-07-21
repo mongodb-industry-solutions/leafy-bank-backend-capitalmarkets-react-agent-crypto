@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
 import logging
-from agent.react_agent import MarketAssistantReactAgent
+from agent.react_agent import CryptoAssistantReactAgent
 
 # Configure logging
 logging.basicConfig(
@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize the service
-market_assistant_service = MarketAssistantReactAgent()
+market_assistant_service = CryptoAssistantReactAgent()
 
 # Create the router
 router = APIRouter(prefix="/crypto-assistant", tags=["Crypto Assistant"])

@@ -1,6 +1,5 @@
 import os
 import logging
-import datetime
 from dotenv import load_dotenv
 from langchain.tools import tool
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -57,13 +56,18 @@ def crypto_analysis_reports_vector_search_tool(query: str, k: int = 1):
     """
     Perform a vector similarity search on crypto analysis reports for the CURRENT CRYPTO PORTFOLIO.
 
-    IMPORTANT: This tool provides crypto technical analysis ONLY for assets included in the current crypto portfolio allocation.  
-    If someone requests real-time data or live updates for assets outside the current portfolio, use the Tavily Search tool instead.
+    IMPORTANT: This tool should typically be used AFTER get_portfolio_allocation_tool
+    to provide context-aware technical analysis for the user's actual holdings.
+
+    COMMON USAGE PATTERNS:
+    - After get_portfolio_allocation_tool for reallocation advice
+    - After get_portfolio_allocation_tool for technical analysis questions
+    - Part of comprehensive market analysis (with news and social tools)
 
     Use this tool when you need:
     - Crypto trends and momentum analysis for portfolio assets
     - Technical indicators for crypto assets (RSI, moving averages, etc.)
-    - Insights on recent crypto portfolio performance
+    - Market conditions to inform reallocation decisions
     - Crypto-specific diagnostics for portfolio holdings
     - Market volatility analysis for cryptocurrency assets
 
@@ -72,8 +76,7 @@ def crypto_analysis_reports_vector_search_tool(query: str, k: int = 1):
         k (int, optional): The number of top results to return. Defaults to 1.
 
     Returns:
-        dict: Contains relevant sections from the most recent crypto analysis report
-              for the current portfolio.
+        dict: Contains relevant sections from the most recent crypto analysis report for the current portfolio.
     """
     try:
         logger.info(f"Searching crypto portfolio analysis for: {query}")
@@ -148,25 +151,26 @@ def crypto_news_reports_vector_search_tool(query: str, k: int = 1):
     """
     Perform a vector similarity search on crypto news reports for the CURRENT CRYPTO PORTFOLIO.
 
-    IMPORTANT: This tool provides crypto news summaries and sentiment analysis ONLY for assets included in the current crypto portfolio allocation.  
-    Note that it DOES NOT offer real-time data or live updates.  
+    IMPORTANT: This tool should typically be used AFTER get_portfolio_allocation_tool.
+    For sentiment questions, use this WITH crypto_social_media_reports_vector_search_tool.
 
-    When possible, include links to the original news articles at the end of the summary for reference.  
-    If someone requests real-time data or information on assets not in the current portfolio, use the Tavily Search tool instead.
+    COMMON USAGE PATTERNS:
+    - After get_portfolio_allocation_tool for sentiment analysis
+    - Combined with crypto_social_media_reports_vector_search_tool for complete sentiment picture
+    - Part of comprehensive market analysis
 
     Use this tool when you need:
     - Recent crypto news affecting portfolio assets
-    - Sentiment analysis for crypto portfolio holdings
-    - News summaries for specific crypto assets in the portfolio
-    - An overview of the news impact on the current crypto portfolio
+    - News sentiment analysis for crypto portfolio holdings  
+    - Media coverage impact on portfolio assets
+    - News-driven market sentiment for crypto assets
 
     Args:
         query (str): The search query related to crypto portfolio assets.
         k (int, optional): The number of top results to return. Defaults to 1.
 
     Returns:
-        dict: Contains relevant news summaries from the most recent crypto news reports
-              for the current portfolio.
+        dict: Contains relevant news summaries from the most recent crypto news reports for the current portfolio.
     """
     try:
         logger.info(f"Searching crypto news reports for: {query}")
@@ -241,8 +245,13 @@ def crypto_social_media_reports_vector_search_tool(query: str, k: int = 1):
     """
     Perform a vector similarity search on crypto social media sentiment reports for the CURRENT CRYPTO PORTFOLIO.
 
-    IMPORTANT: This tool provides crypto social media sentiment analysis ONLY for assets included in the current crypto portfolio allocation.  
-    Social media sentiment is crucial for cryptocurrency investment decisions as it reflects community perception and market sentiment.
+    IMPORTANT: This tool should typically be used AFTER get_portfolio_allocation_tool.
+    For complete sentiment analysis, use this WITH crypto_news_reports_vector_search_tool.
+
+    COMMON USAGE PATTERNS:
+    - After get_portfolio_allocation_tool for sentiment analysis
+    - Combined with crypto_news_reports_vector_search_tool for complete sentiment picture
+    - Essential for crypto markets where social sentiment drives prices
 
     Use this tool when you need:
     - Social media sentiment analysis for crypto portfolio assets
@@ -331,13 +340,21 @@ def crypto_social_media_reports_vector_search_tool(query: str, k: int = 1):
 def get_portfolio_allocation_tool(query: str) -> dict:
     """Get the most recent crypto portfolio allocation.
 
-    IMPORTANT: This tool provides the most recent crypto portfolio allocation.
+    CRITICAL: This tool should be called FIRST for ANY portfolio-related question.
+    The user cannot get meaningful advice about "their" portfolio without knowing what they own.
+
+    MANDATORY USAGE PATTERNS:
+    - Reallocation questions → Use this FIRST, then crypto_analysis_reports_vector_search_tool
+    - Sentiment questions → Use this FIRST, then crypto_news + crypto_social_media tools  
+    - Performance questions → Use this FIRST, then get_portfolio_ytd_return_tool
+    - ANY "my portfolio" question → Use this FIRST
 
     Use this tool when you need:
     - Crypto portfolio allocation for the current portfolio
-    - Digital asset distribution information
+    - Digital asset distribution information  
     - Current cryptocurrency investment breakdown
     - Asset types (Cryptocurrency vs Stablecoin)
+    - To confirm what assets the user owns before providing advice
 
     Args:
         query (str): The search query related to crypto portfolio allocation.
