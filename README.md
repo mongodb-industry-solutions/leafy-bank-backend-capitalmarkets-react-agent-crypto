@@ -201,7 +201,7 @@ The Crypto Assistant ReAct Agent leverages specialized tools to access and analy
 - [langchain-mongodb](https://github.com/langchain-ai/langchain-mongodb) for MongoDB integration with LangChain and LangGraph.
 - [langgraph-checkpoint-mongodb](https://github.com/langchain-ai/langgraph-checkpoint-mongodb) for agent state persistence in MongoDB.
 - [langgraph](https://github.com/langchain-ai/langgraph) for building agent workflow graphs.
-- [langchain-community](https://github.com/langchain-ai/langchain) for additional agent tools and integrations.
+- [langchain-tavily](https://python.langchain.com/docs/integrations/tools/tavily_search/) for integrating Tavily search capabilities.
 - [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) and [botocore](https://botocore.amazonaws.com/v1/documentation/api/latest/index.html) for AWS Bedrock API integration.
 - [langchain-aws](https://github.com/langchain-ai/langchain-aws) for AWS-related LangChain integrations.
 - [voyageai](https://voyageai.com/) for generating finance-specific embeddings.

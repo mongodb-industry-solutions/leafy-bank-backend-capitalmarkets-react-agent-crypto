@@ -2,7 +2,7 @@ import os
 import logging
 from dotenv import load_dotenv
 from langchain.tools import tool
-from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_tavily import TavilySearch
 from agent.vogayeai.vogaye_ai_embeddings import VogayeAIEmbeddings
 from agent.db.mdb import MongoDBConnector
 
@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize search tool
-tavily_search_tool = TavilySearchResults(max_results=3)
+tavily_search_tool = TavilySearch(max_results=3)
 
 # Initialize embeddings
 embedding_model_id = os.getenv("EMBEDDINGS_MODEL_ID", "voyage-finance-2")
