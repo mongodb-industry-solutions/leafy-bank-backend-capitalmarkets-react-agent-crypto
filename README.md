@@ -211,7 +211,6 @@ The Crypto Assistant ReAct Agent leverages specialized tools to access and analy
 - [pytz](https://pypi.org/project/pytz/) for timezone handling in scheduled reports.
 - [fastapi](https://fastapi.tiangolo.com/) for API development.
 - [uvicorn](https://www.uvicorn.org/) for running the ASGI server.
-- [rich](https://rich.readthedocs.io/) for improved terminal output and logging.
 
 ## Relevant Models
 
@@ -324,34 +323,6 @@ E.g. `http://localhost:8007/docs`
 
 > [!NOTE]
 > Make sure to replace `<PORT_NUMBER>` with the port number you are using and ensure the backend is running.
-
-> [!TIP]
-> **Run the Chatbot Directly from the Console**
->
-> You can interact with the Crypto Assistant Agent directly from your terminal using the built-in console interface:
->
-> ```bash
-> # Navigate to the backend directory
-> cd backend
->
-> # Run the console chatbot
-> poetry run python console_market_assistant.py
-> ```
->
-> The console interface offers several convenient features:
->
-> - **Interactive Sessions**: Start new chat sessions or continue from previous conversations
-> - **Conversation History**: View detailed conversation history with timestamped checkpoints
-> - **Memory Management**: Clear chat memory when needed
-> - **Rich Formatting**: Enjoy enhanced readability with color-coded outputs
-> - **Tool Transparency**: See which specific crypto analysis tools the agent is using to answer your questions
->
-> To navigate the console chatbot:
-> - Type your cryptocurrency questions naturally and press Enter (e.g., "What's the sentiment around my crypto portfolio?")
-> - Type `quit` to exit the chat session
-> - Type `clear all memory` and confirm with `yes` to reset all conversation history
->
-> This console interface is particularly useful for testing the crypto chatbot's capabilities or for users who prefer command-line interactions over the API endpoints.
 
 ## Common errors
 

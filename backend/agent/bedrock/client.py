@@ -87,25 +87,3 @@ class BedrockClient:
         """Destructor."""
         self._close_bedrock()
 
-
-# Example usage of the BedrockClient class.
-if __name__ == '__main__':
-
-    # If you are not going to use BedrockClient and its models, you might remove the packages boto3 and botocore. If so:
-    # Open a Terminal and run the following commands:
-    # 1. cd backend ---> (Make sure to be in the backend directory)
-    # 2. poetry remove boto3 botocore ---> (This will remove the packages from the project)
-
-    aws_access_key = os.getenv("AWS_ACCESS_KEY_ID")
-    aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-    region_name = os.getenv("AWS_REGION")
-
-    # Example usage of the BedrockClient class.
-    client = BedrockClient(
-        aws_access_key=aws_access_key,
-        aws_secret_key=aws_secret_key,
-        region_name=region_name
-    )._get_bedrock_client()
-
-    print(type(client))
-    print(client)
