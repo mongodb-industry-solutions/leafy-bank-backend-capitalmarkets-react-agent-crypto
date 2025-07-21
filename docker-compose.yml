@@ -1,10 +1,10 @@
 services:
-  capitalmarkets-chatbot-backend:
+  capitalmarkets-react-crypto-backend:
     build:
       context: .
       no_cache: true
       dockerfile: Dockerfile.backend
-    image: capitalmarkets-chatbot-image-backend:latest
+    image: capitalmarkets-react-crypto-image-backend:latest
     volumes:
       - ~/.aws/credentials:/root/.aws/credentials:ro
       - ~/.aws/config:/root/.aws/config:ro
@@ -12,4 +12,4 @@ services:
     ports:
       - "8000:8000"
     restart: always
-    container_name: capitalmarkets-chatbot-container
+    container_name: capitalmarkets-react-crypto-container
