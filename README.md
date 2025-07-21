@@ -211,7 +211,6 @@ The Crypto Assistant ReAct Agent leverages specialized tools to access and analy
 - [pytz](https://pypi.org/project/pytz/) for timezone handling in scheduled reports.
 - [fastapi](https://fastapi.tiangolo.com/) for API development.
 - [uvicorn](https://www.uvicorn.org/) for running the ASGI server.
-- [rich](https://rich.readthedocs.io/) for improved terminal output and logging.
 
 ## Relevant Models
 
