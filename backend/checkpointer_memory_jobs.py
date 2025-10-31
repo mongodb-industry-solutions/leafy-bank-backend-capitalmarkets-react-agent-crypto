@@ -112,7 +112,7 @@ class CheckpointerMemoryJobs:
         Schedule jobs
         """
         # Daily
-        run_cleanup_old_memories_time = dt.time(hour=4, minute=0, tzinfo=timezone.utc)
+        run_cleanup_old_memories_time = dt.time(hour=4, minute=10, tzinfo=timezone.utc)
         self.scheduler.daily(run_cleanup_old_memories_time, self.run_clear_old_memories)
         logger.info("Scheduled jobs configured!")
 

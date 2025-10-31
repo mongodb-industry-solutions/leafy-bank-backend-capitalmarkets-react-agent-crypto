@@ -1,0 +1,27 @@
+env:
+  NODE_ENV: staging
+  
+envSecrets:
+  MONGODB_URI: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  DATABASE_NAME: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  APP_NAME: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  VOYAGE_API_KEY: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  TAVILY_API_KEY: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  AWS_REGION: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  CHAT_COMPLETIONS_MODEL_ID: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  EMBEDDINGS_MODEL_ID: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  AGENT_PROFILES_COLLECTION: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  CHECKPOINTS_AIO_COLLECTION: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  CHECKPOINTS_WRITES_AIO_COLLECTION: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORTS_COLLECTION_CRYPTO_ANALYSIS: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORT_CRYPTO_ANALYSIS_VECTOR_INDEX_NAME: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORTS_COLLECTION_CRYPTO_NEWS: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORTS_COLLECTION_CRYPTO_SM: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORT_CRYPTO_SM_VECTOR_INDEX_NAME: leafy-bank-backend-capitalmarkets-react-agent-crypto
+  REPORT_VECTOR_FIELD: leafy-bank-backend-capitalmarkets-react-agent-crypto
+
+serviceAccount:
+  enabled: true
+  create: false  # Don't create a new service account
+  name: irsa  # Use the existing one
