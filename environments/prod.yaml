@@ -1,26 +1,33 @@
+# TEMPORARY — ist-prod green deployment (blue/green cutover).
+# Clone of prod.yaml; the ONLY difference is every envSecrets value points at the
+# green ksec group `capitalmarkets-react-agent-crypto-bian` instead of
+# `capitalmarkets-react-agent-crypto`.
+# Deployed by the `production-bian` Drone pipeline on the `prod-green` branch.
+# At Phase 3 this file is renamed to prod.yaml and the temp pipeline is deleted.
+
 env:
   NODE_ENV: prod
-  
+
 envSecrets:
-  MONGODB_URI: capitalmarkets-react-agent-crypto
-  DATABASE_NAME: capitalmarkets-react-agent-crypto
-  APP_NAME: capitalmarkets-react-agent-crypto
-  VOYAGE_API_KEY: capitalmarkets-react-agent-crypto
-  TAVILY_API_KEY: capitalmarkets-react-agent-crypto
-  AWS_REGION: capitalmarkets-react-agent-crypto
-  CHAT_COMPLETIONS_MODEL_ID: capitalmarkets-react-agent-crypto
-  EMBEDDINGS_MODEL_ID: capitalmarkets-react-agent-crypto
-  AGENT_PROFILES_COLLECTION: capitalmarkets-react-agent-crypto
-  CHECKPOINTS_AIO_COLLECTION: capitalmarkets-react-agent-crypto
-  CHECKPOINTS_WRITES_AIO_COLLECTION: capitalmarkets-react-agent-crypto
-  REPORTS_COLLECTION_CRYPTO_ANALYSIS: capitalmarkets-react-agent-crypto
-  REPORT_CRYPTO_ANALYSIS_VECTOR_INDEX_NAME: capitalmarkets-react-agent-crypto
-  REPORTS_COLLECTION_CRYPTO_NEWS: capitalmarkets-react-agent-crypto
-  REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME: capitalmarkets-react-agent-crypto
-  REPORTS_COLLECTION_CRYPTO_SM: capitalmarkets-react-agent-crypto
-  REPORT_CRYPTO_SM_VECTOR_INDEX_NAME: capitalmarkets-react-agent-crypto
-  REPORT_VECTOR_FIELD: capitalmarkets-react-agent-crypto
-  NODE_ENV: capitalmarkets-react-agent-crypto
+  MONGODB_URI: capitalmarkets-react-agent-crypto-bian
+  DATABASE_NAME: capitalmarkets-react-agent-crypto-bian
+  APP_NAME: capitalmarkets-react-agent-crypto-bian
+  VOYAGE_API_KEY: capitalmarkets-react-agent-crypto-bian
+  TAVILY_API_KEY: capitalmarkets-react-agent-crypto-bian
+  AWS_REGION: capitalmarkets-react-agent-crypto-bian
+  CHAT_COMPLETIONS_MODEL_ID: capitalmarkets-react-agent-crypto-bian
+  EMBEDDINGS_MODEL_ID: capitalmarkets-react-agent-crypto-bian
+  AGENT_PROFILES_COLLECTION: capitalmarkets-react-agent-crypto-bian
+  CHECKPOINTS_AIO_COLLECTION: capitalmarkets-react-agent-crypto-bian
+  CHECKPOINTS_WRITES_AIO_COLLECTION: capitalmarkets-react-agent-crypto-bian
+  REPORTS_COLLECTION_CRYPTO_ANALYSIS: capitalmarkets-react-agent-crypto-bian
+  REPORT_CRYPTO_ANALYSIS_VECTOR_INDEX_NAME: capitalmarkets-react-agent-crypto-bian
+  REPORTS_COLLECTION_CRYPTO_NEWS: capitalmarkets-react-agent-crypto-bian
+  REPORT_CRYPTO_NEWS_VECTOR_INDEX_NAME: capitalmarkets-react-agent-crypto-bian
+  REPORTS_COLLECTION_CRYPTO_SM: capitalmarkets-react-agent-crypto-bian
+  REPORT_CRYPTO_SM_VECTOR_INDEX_NAME: capitalmarkets-react-agent-crypto-bian
+  REPORT_VECTOR_FIELD: capitalmarkets-react-agent-crypto-bian
+  NODE_ENV: capitalmarkets-react-agent-crypto-bian
 
 serviceAccount:
   enabled: true

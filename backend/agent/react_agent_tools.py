@@ -27,8 +27,10 @@ ve = VogayeAIEmbeddings(api_key=os.getenv("VOYAGE_API_KEY"))
 CRYPTO_ANALYSIS_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_CRYPTO_ANALYSIS", "reports_crypto_analysis")
 CRYPTO_NEWS_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_CRYPTO_NEWS", "reports_crypto_news")
 CRYPTO_SM_COLLECTION_NAME = os.getenv("REPORTS_COLLECTION_CRYPTO_SM", "reports_crypto_sm")
-PORTFOLIO_ALLOCATION_COLLECTION_NAME = os.getenv("CRYPTO_PORTFOLIO_ALLOCATION_COLLECTION", "crypto_portfolio_allocation")
-PORTFOLIO_PERFORMANCE_COLLECTION_NAME = os.getenv("PORTFOLIO_PERFORMANCE_COLLECTION", "portfolio_performance")
+PORTFOLIO_ALLOCATION_COLLECTION_NAME = os.getenv("CRYPTO_PORTFOLIO_ALLOCATION_COLLECTION", "portfolioAllocation")
+PORTFOLIO_PERFORMANCE_COLLECTION_NAME = os.getenv("PORTFOLIO_PERFORMANCE_COLLECTION", "portfolioPerformance")
+# Crypto portfolio identity in the consolidated portfolioAllocation collection.
+CRYPTO_PORTFOLIO_ID = os.getenv("CRYPTO_PORTFOLIO_ID", "PORT-0002")
 
 # Initialize MongoDB connector
 mongodb_connector = MongoDBConnector()
@@ -365,22 +367,22 @@ def get_portfolio_allocation_tool(query: str) -> dict:
     try:
         logger.info(f"Getting crypto portfolio allocation for: {query}")
         
-        # Get all portfolio allocation documents
-        portfolio_allocation = list(portfolio_allocation_collection.find({}))
-        
+        # Single folded collection — filter to the crypto portfolio; read camelCase fields.
+        portfolio_allocation = list(portfolio_allocation_collection.find({"portfolioId": CRYPTO_PORTFOLIO_ID}))
+
         if not portfolio_allocation:
             return {"results": "No crypto portfolio allocation found."}
-        
+
         # Format the allocation data
         formatted_allocation = []
         for asset in portfolio_allocation:
             formatted_asset = {
                 "symbol": asset.get("symbol", "Unknown"),
                 "description": asset.get("description", "Unknown"),
-                "allocation_percentage": asset.get("allocation_percentage", "0%"),
-                "allocation_number": asset.get("allocation_number", 0),
-                "asset_type": asset.get("asset_type", "Unknown"),
-                "binance_symbol": asset.get("binance_symbol", "Unknown")
+                "allocation_percentage": asset.get("allocationPercentage", "0%"),
+                "allocation_number": asset.get("allocationNumber", 0),
+                "asset_type": asset.get("assetType", "Unknown"),
+                "binance_symbol": asset.get("binanceSymbol", "Unknown")
             }
             formatted_allocation.append(formatted_asset)
         
@@ -426,7 +428,7 @@ def get_portfolio_ytd_return_tool(query: str) -> str:
             return "No crypto portfolio performance data found."
         
         # Extract the YTD return
-        ytd_return = most_recent.get("percentage_of_cumulative_return", 0)
+        ytd_return = most_recent.get("percentageOfCumulativeReturn", 0)
         
         # Convert to percentage format
         ytd_return_percentage = round(ytd_return * 100, 2)
