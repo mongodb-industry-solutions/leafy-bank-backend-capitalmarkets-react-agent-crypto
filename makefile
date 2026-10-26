@@ -15,7 +15,7 @@ clean:
 install_poetry:
 	brew install pipx
 	pipx ensurepath
-	pipx install poetry==1.8.4
+	pipx install poetry==2.5.1
 
 poetry_start:
 	cd backend && poetry config virtualenvs.in-project true
